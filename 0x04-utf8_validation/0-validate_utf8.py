@@ -3,6 +3,7 @@
 UTF-8 Validation module
 """
 
+
 def validUTF8(data):
     """Checks if a list of integers are valid UTF-8 codepoints.
     See <https://datatracker.ietf.org/doc/html/rfc3629#page-4>
