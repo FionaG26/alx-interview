@@ -1,22 +1,35 @@
 #!/usr/bin/node
 
 const request = require('request');
+const API_URL = 'https://swapi-api.hbtn.io/api';
 
-const movieId = process.argv[2];
-const apiUrl = `https://swapi-api.hbtn.io/api/films/${movieId}/`;
+if (process.argv.length > 2) {
+  request(`${API_URL}/films/${process.argv[2]}/`, (err, _, body) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
 
-request(apiUrl, (error, response, body) => {
-  if (!error && response.statusCode === 200) {
-    const filmData = JSON.parse(body);
-    const characters = filmData.characters;
-
-    characters.forEach((characterUrl) => {
-      request(characterUrl, (charError, charResponse, charBody) => {
-        if (!charError && charResponse.statusCode === 200) {
-          const characterData = JSON.parse(charBody);
-          console.log(characterData.name);
-        }
+    const charactersURL = JSON.parse(body).characters;
+    const charactersNamePromises = charactersURL.map(url => {
+      return new Promise((resolve, reject) => {
+        request(url, (promiseErr, __, charactersReqBody) => {
+          if (promiseErr) {
+            reject(promiseErr);
+          }
+          resolve(JSON.parse(charactersReqBody).name);
+        });
       });
     });
-  }
-});
+
+    Promise.all(charactersNamePromises)
+      .then(names => {
+        console.log(names.join('\n'));
+      })
+      .catch(allErr => {
+        console.error(allErr);
+      });
+  });
+} else {
+  console.error('Usage: ./script.js <Movie ID>');
+}
